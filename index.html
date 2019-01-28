@@ -5,33 +5,70 @@
     <meta charset="UTF-8">
 </head>
 <body>
-<script src="https://www.w3schools.com/lib/w3.js"></script>
 <script>
+    // get list page to show view HTML
     function getListPagesAccessToken(user_access_token) {
-        FB.api('/me/accounts', 'get', {access_token: user_access_token}, function (response) {
-            // console.log(response.data);
-            const myObject = response;
-            w3.displayObject("id01", myObject);
+        checkStatusPageWithWebhook();
 
-            const myDiv = document.getElementById("myDiv");
+        FB.api('/me/accounts', 'get', {access_token: user_access_token}, function (response) {
+            const list_page = document.getElementById("list_page");
             for (let i = 0; i < response.data.length; i++) {
                 console.log(i + ". \n ID: " + response.data[i].id + "\n Name: " + response.data[i].name + "\n Access_token: " + response.data[i].access_token);
                 const checkBox = document.createElement("input");
                 const label = document.createElement("label");
 
                 checkBox.setAttribute("type", "checkbox");
-                checkBox.setAttribute("name", response.data[i].name);
-                checkBox.setAttribute("value", response.data[i].id);
-                myDiv.appendChild(checkBox);
-                myDiv.appendChild(label);
+                checkBox.setAttribute("name", response.data[i].id);
+                checkBox.setAttribute("value", response.data[i].access_token);
+                checkBox.setAttribute("class", "dataCheckbox");
+                checkBox.setAttribute("disabled", "true");
+
+                list_page.appendChild(checkBox);
+                list_page.appendChild(label);
 
                 label.appendChild(document.createTextNode(response.data[i].name));
             }
         });
     }
 
-    function showListPagesIntoViews(list_pages_data) {
-        getListPagesAccessToken()
+    function checkStatusPageWithWebhook() {
+        FB.api(
+            "/" + "675842995955434" + "/subscribed_apps",
+            "GET",
+            {
+                access_token: 'EAAILZC4mTe4IBACLsVcGF9JbfKqHOuYYl5KU8zH2s9eHF9yNgPTQnhZCdMeZBiBHYJyZCZCn42uHWETZAmFx83q26f6LKrTFxILXECCufA1UnBnj6vEhh4lXjEkrrt4IURgbrqMtRQknlN34A4pzcz3ZAjua8BfZCRP3yN8JmRLkF2XLlOm7gtZClJw9zowEhoSbHjZC1R6wJV4gZDZD',
+            },
+            function (response) {
+                if (!response.error) {
+                    console.log('ok');
+                } else {
+                    console.log('fail');
+                }
+            }
+        );
+    }
+
+    // subscribe page to webhook
+    function subscribePageToWebHook() {
+        let id_page, page_access_token;
+        const inputElements = document.getElementsByClassName('dataCheckbox');
+        for (let i = 0; inputElements[i]; ++i) {
+            if (inputElements[i].checked) {
+                id_page = inputElements[i].name;
+                page_access_token = inputElements[i].value;
+                FB.api(
+                    "/" + id_page + "/subscribed_apps",
+                    "POST",
+                    {
+                        access_token: page_access_token,
+                        subscribed_fields: 'messages, messaging_postbacks, messaging_optins, message_deliveries'
+                    },
+                    function (response) {
+                        console.log('ok');
+                    }
+                );
+            }
+        }
     }
 
 
@@ -109,7 +146,7 @@
         FB.api('/me', function (response) {
             console.log('Successful login for: ' + response.name);
             document.getElementById('status').innerHTML =
-                'Hello, ' + response.name + '!';
+                'Welcome , ' + response.name + '!';
         });
     }
 </script>
@@ -126,9 +163,10 @@
 <div id="status">
 </div>
 
-<select id="id01">
-    <option w3-repeat="data">{{name}}</option>
-</select>
-<div id="myDiv"></div>
+<form onsubmit="subscribePageToWebHook()">
+    <div id="list_page"></div>
+    <input class="btn btn-success" type="submit" value="Subscribe">
+</form>
+
 </body>
 </html>
