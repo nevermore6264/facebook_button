@@ -8,8 +8,6 @@
 <script>
     // get list page to show view HTML
     function getListPagesAccessToken(user_access_token) {
-        checkStatusPageWithWebhook();
-
         FB.api('/me/accounts', 'get', {access_token: user_access_token}, function (response) {
             const list_page = document.getElementById("list_page");
             for (let i = 0; i < response.data.length; i++) {
@@ -21,7 +19,6 @@
                 checkBox.setAttribute("name", response.data[i].id);
                 checkBox.setAttribute("value", response.data[i].access_token);
                 checkBox.setAttribute("class", "dataCheckbox");
-                checkBox.setAttribute("disabled", "true");
 
                 list_page.appendChild(checkBox);
                 list_page.appendChild(label);
@@ -29,23 +26,6 @@
                 label.appendChild(document.createTextNode(response.data[i].name));
             }
         });
-    }
-
-    function checkStatusPageWithWebhook() {
-        FB.api(
-            "/" + "675842995955434" + "/subscribed_apps",
-            "GET",
-            {
-                access_token: 'EAAILZC4mTe4IBACLsVcGF9JbfKqHOuYYl5KU8zH2s9eHF9yNgPTQnhZCdMeZBiBHYJyZCZCn42uHWETZAmFx83q26f6LKrTFxILXECCufA1UnBnj6vEhh4lXjEkrrt4IURgbrqMtRQknlN34A4pzcz3ZAjua8BfZCRP3yN8JmRLkF2XLlOm7gtZClJw9zowEhoSbHjZC1R6wJV4gZDZD',
-            },
-            function (response) {
-                if (!response.error) {
-                    console.log('ok');
-                } else {
-                    console.log('fail');
-                }
-            }
-        );
     }
 
     // subscribe page to webhook
@@ -69,6 +49,37 @@
                 );
             }
         }
+    }
+
+    // unsubscribe page to webhook
+    function unsubscribePageToWebHook() {
+        let id_page, page_access_token;
+        const inputElements = document.getElementsByClassName('dataCheckbox');
+        for (let i = 0; inputElements[i]; ++i) {
+            if (inputElements[i].checked) {
+                id_page = inputElements[i].name;
+                page_access_token = inputElements[i].value;
+                FB.api(
+                    "/" + id_page + "/subscribed_apps",
+                    "DELETE",
+                    {
+                        access_token: page_access_token,
+                    },
+                    function (response) {
+                        console.log('success');
+                    }
+                );
+            }
+        }
+    }
+
+    //check multiple submit buttons on one form
+    function submitFunction(i) {
+        if (i == 1) document.theForm.action =
+            subscribePageToWebHook();
+        if (i == 2) document.theForm.action =
+            unsubscribePageToWebHook();
+        // document.theForm.submit()
     }
 
 
@@ -115,14 +126,10 @@
         // FB.getLoginStatus().  This function gets the state of the
         // person visiting this page and can return one of three states to
         // the callback you provide.  They can be:
-        //
         // 1. Logged into your app ('connected')
         // 2. Logged into Facebook, but not your app ('not_authorized')
         // 3. Not logged into Facebook and can't tell if they are logged into
         //    your app or not.
-        //
-        // These three cases are handled in the callback function.
-
         FB.getLoginStatus(function (response) {
             statusChangeCallback(response);
         });
@@ -152,20 +159,18 @@
 </script>
 
 <!--
-  Below we include the Login Button social plugin. This button uses
-  the JavaScript SDK to present a graphical Login button that triggers
-  the FB.login() function when clicked.
+ Button login FB
 -->
-
 <fb:login-button scope="public_profile,email,manage_pages,publish_pages" onlogin="checkLoginState();">
 </fb:login-button>
 
 <div id="status">
 </div>
 
-<form onsubmit="subscribePageToWebHook()">
+<form name="theForm">
     <div id="list_page"></div>
-    <input class="btn btn-success" type="submit" value="Subscribe">
+    <input class="btn btn-success" type="button" value="Subscribe" onclick="submitFunction(1)">
+    <input class="btn btn-success" type="button" value="Unsubscribe" onclick="submitFunction(2)">
 </form>
 
 </body>
